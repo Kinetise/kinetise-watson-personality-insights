@@ -222,7 +222,8 @@ function createChildFromJSON(json, nestLevel) {
         id: json['id'],
         name: json['name'],
         value: formatPercentage(json['percentage']),
-        type: (nestLevel + 1).toString()
+        type: (nestLevel + 1).toString(),
+        hasChildren: (json['children'] !== undefined) + ''
     }
 
     if (idsWithGraphs.indexOf(child.id) > -1) {
@@ -238,7 +239,7 @@ function formatPercentage(percentage) {
     }
 }
 
-var idsWithGraphs = ['Openness_parent', 'Openness', 'Conscientiousness', 'Extraversion',
+var idsWithGraphs = ['personality', 'Openness', 'Conscientiousness', 'Extraversion',
                      'Agreeableness', 'Neuroticism', 'needs', 'values']
 
 function getLatestInsightsJSON(req, handler) {
@@ -305,7 +306,12 @@ function getChildWithId(id, root) {
             var child = root[i]
 
             if (child['id'] === id) {
-                return child
+                if (child['children'] && child['children'].length === 1) {
+                    return child['children'][0]
+                }
+                else {
+                    return child
+                }
             }
 
             child = getChildWithId(id, child['children'])
@@ -317,8 +323,8 @@ function getChildWithId(id, root) {
     }
 }
 
-var colors = ['#F7464A', '#46BFBD', '#FDB45C', '#949FB1', '#4D5360']
-var highlights = ['#FF5A5E', '#5AD3D1', '#FFC870', '#A8B3C5', '#616774']
+var colors = ['#4178BD', '#9854D4', '#01B4A0', '#D74009', '#323232', '#EDC01C']
+var highlights = ['#5596E6', '#AF6EE8', '#41D6C3', '#FF5006', '#555555', '#FAE249']
 
 function createChartData(rootJSON) {
     var children = rootJSON['children']

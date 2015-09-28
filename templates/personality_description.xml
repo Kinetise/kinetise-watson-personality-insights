@@ -11,7 +11,11 @@
             <type>{{ item.type }}</type>
             {% if item.graphURL %}
             <graphURL>{{ item.graphURL }}</graphURL>
+            <showGraph>true</showGraph>
+            {% else %}
+            <showGraph>false</showGraph>
             {% endif %}
+            <hasChildren>{{ item.hasChildren }}</hasChildren>
         </item>
         {% endfor %}
     </channel>
