@@ -1,8 +1,8 @@
 var bodyParser = require('body-parser')
+    Cloudant = require('cloudant')
     cfenv = require('cfenv')
     express = require('express')
     fs = require('fs')
-    sqlite3 = require('sqlite3').verbose()
     swig = require('swig')
     watson = require('watson-developer-cloud')
 
@@ -23,24 +23,39 @@ var insights = watson.personality_insights({
 // ------------------------
 // Database initialization
 // ------------------------
-var db = new sqlite3.Database('kinetise.db')
-var query = 'SELECT name FROM sqlite_master WHERE type="table" AND name="sessions"'
-var create = 'CREATE TABLE "sessions" (' +
-             '"id" INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-             '"sessionId" VARCHAR(128), ' +
-             '"content" TEXT, ' +
-             '"created" DATETIME, ' +
-             '"response" TEXT)'
+var dbCredentials;
+var db;
 
-db.get(query, function (err, rows) {
-    if (rows === undefined) {
-        db.run(create, function (err) {
-            if (err !== null) {
-                console.log('Failed to create database: ' + err)
+function initializeDatabase() {
+    if (process.env.VCAP_SERVICES) {
+        var vcapServices = JSON.parse(process.env.VCAP_SERVICES)
+
+        if (vcapServices.cloudantNoSQLDB) {
+            var cloudantServices = vcapServices.cloudantNoSQLDB[0].credentials
+
+            dbCredentials = {
+                dbName: 'sessions',
+                host: cloudantServices.host,
+                port: cloudantServices.port,
+                user: cloudantServices.username,
+                password: cloudantServices.password,
+                url: cloudantServices.url
             }
-        })
+
+            var cloudant = Cloudant(dbCredentials.url)
+            cloudant.db.create(dbCredentials.dbName, function(err, res) {
+                if (err) { console.log('Have not created database, it already exists') }
+            })
+
+            db = cloudant.db.use(dbCredentials.dbName)
+            return
+        }
     }
-})
+
+    console.error('Could not establish connection to Cloudant database')
+}
+
+initializeDatabase()
 
 // -----------------------------------------
 // setContent: receive text from mobile app
@@ -64,28 +79,18 @@ app.post('/setContent', function (req, res) {
 })
 
 function sendPostError(res, message) {
-    var statusCode = 400
-    var context = {
-        message: message
+    var responseJSON = {
+        message: {
+            title: 'Error',
+            description: message
+        }
     }
 
-    sendPostResponse(res, context, statusCode)
-}
-
-function sendPostResponse(res, context, statusCode) {
-    var template = swig.compileFile('templates/response.xml')
-
-    res.set('Content-Type', 'text/xml')
-    res.status(statusCode).send(template(context))
+    res.status(400).json(responseJSON)
 }
 
 function sendPostSuccess(res) {
-    var statusCode = 200
-    var context = {
-        message: ''
-    }
-
-    sendPostResponse(res, context, statusCode)
+    res.status(200).json({})
 }
 
 function checkSetContentRequestValidity(req, handler) {
@@ -111,18 +116,12 @@ function getSessionIDUnchecked(req) {
 }
 
 function isContentGiven(req) {
-    var items = req.body['items']
-
-    if (items && Array.isArray(items)) {
-        var firstItem = items[0]
-
-        return (firstItem['form'] &&
-                firstItem['form']['content'])
-    }
+    var body = req.body
+    return body['form'] && body['form']['content']
 }
 
 function getContentUnchecked(req) {
-    return req.body['items'][0]['form']['content']
+    return req.body['form']['content']
 }
 
 function processContentUnchecked(req, handler) {
@@ -135,7 +134,7 @@ function processContentUnchecked(req, handler) {
 
     insights.profile(insightsConfig, function (err, response) {
         if (err) {
-            console.log('Personality insights fetch failed: ', err)
+            console.error('Personality insights fetch failed: ', err)
             handler(err)
         }
         else {
@@ -148,14 +147,29 @@ function processContentUnchecked(req, handler) {
 }
 
 function updateDatabaseContent(content, sessionID, response, handler) {
-    var insert = 'INSERT INTO sessions (sessionID, content, response, created) VALUES (?, ?, ?, datetime("now"))'
+    var doc = undefined
 
-    db.run(insert, [sessionID, content, response], function (err) {
-        if (err !== null) {
-            console.log('Failed to insert content: ' + err)
+    db.get(sessionID, function(err, data) {
+        if (!err && data) {
+            doc = data
+        }
+        else {
+            doc = {
+                sessionID: sessionID
+            }
         }
 
-        handler(err)
+        doc.content = content
+        doc.response = response
+        doc.created = new Date().toLocaleString()
+
+        db.insert(doc, sessionID, function(err, body, header) {
+            if (err) {
+                console.error('Failed to insert content: ' + err)
+            }
+
+            handler(err)
+        })
     })
 }
 
@@ -163,7 +177,6 @@ function updateDatabaseContent(content, sessionID, response, handler) {
 // getDescription: returns personality description
 // ------------------------------------------------
 app.get('/getDescription', function (req, res) {
-    var template = swig.compileFile('templates/personality_description.xml')
     getLatestInsightsJSON(req, function(insights) {
         if (insights) {
             var items = parseDescriptionFromWatsonResponse(req, insights)
@@ -176,13 +189,7 @@ app.get('/getDescription', function (req, res) {
 })
 
 function sendDescriptionSuccess(res, items) {
-    var context = {
-        items: items
-    }
-
-    var template = swig.compileFile('templates/personality_description.xml')
-    res.set('Content-Type', 'text/xml')
-    res.status(200).send(template(context))
+    res.status(200).json(items)
 }
 
 function parseDescriptionFromWatsonResponse(req, response) {
@@ -193,6 +200,10 @@ function parseDescriptionFromWatsonResponse(req, response) {
     items.forEach(function (item) {
         if (item.graphURL) {
             item.graphURL += '/?sessionId=' + sessionID
+            item.showGraph = true
+        }
+        else {
+            item.showGraph = false
         }
     })
 
@@ -240,7 +251,7 @@ function formatPercentage(percentage) {
 }
 
 var idsWithGraphs = ['personality', 'Openness', 'Conscientiousness', 'Extraversion',
-                     'Agreeableness', 'Neuroticism', 'needs', 'values']
+    'Agreeableness', 'Neuroticism', 'needs', 'values']
 
 function getLatestInsightsJSON(req, handler) {
     getLatestResponse(req, function(response) {
@@ -255,19 +266,17 @@ function getLatestInsightsJSON(req, handler) {
 
 function getLatestResponse(req, handler) {
     var sessionID = getSessionIDUnchecked(req)
-        select = 'SELECT * FROM sessions WHERE sessionId = ? ' +
-                 'ORDER BY datetime(created) DESC LIMIT 1'
         response = undefined
 
-    db.get(select, [sessionID], function (err, row) {
+    db.get(sessionID, function(err, data) {
         if (err) {
-            console.log('Content fetching error: ', err)
+            console.error('Content fetching error: ', err)
         }
-        else if (row) {
-            response = row['response']
+        else if (data) {
+            response = data.response
         }
         else {
-            console.log('No entry for sessionID: ' + sessionID)
+            console.error('No entry for sessionID: ' + sessionID)
         }
 
         handler(response)
@@ -296,7 +305,8 @@ app.get('/getGraph/:watsonId', function(req, res) {
             }
         }
 
-        res.status(404).send('404 - Page not found')
+        var errorTemplate = swig.compileFile('templates/404.html')
+        res.status(404).send(errorTemplate({}))
     })
 })
 
@@ -367,5 +377,5 @@ function createChartOptions() {
 var appEnv = cfenv.getAppEnv()
 
 app.listen(appEnv.port, function() {
-  console.log("server starting on " + appEnv.url)
+    console.log("server starting on " + appEnv.url)
 })

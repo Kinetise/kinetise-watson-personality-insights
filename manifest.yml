@@ -1,8 +1,21 @@
+declared-services:
+  cloudant-db-shared:
+    label: cloudantNoSQLDB
+    plan: Shared
+  kinetise-free:
+    label: kinetise
+    plan: free
+  personality-insights-tiered:
+    label: personality_insights
+    plan: tiered
+
 applications:
 - path: .
   memory: 256M
   instances: 1
-  domain: mybluemix.net
-  name: KinetisePersonality
-  host: kinetisepersonality
+  name: bluemix-kinetise-personality-insights-app
   disk_quota: 1024M
+  buildpack: sdk-for-nodejs_v3_0-20160125-1224
+  services:
+    - cloudant-db-shared
+    - personality-insights-tiered
