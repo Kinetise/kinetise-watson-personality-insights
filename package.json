@@ -7,9 +7,9 @@
   },
   "dependencies": {
     "body-parser": "^1.14.0",
+    "cloudant": "*",
     "cfenv": "1.0.x",
     "express": "4.12.x",
-    "sqlite3": "^3.1.0",
     "swig": "^1.4.2",
     "watson-developer-cloud": "^0.10.4"
   },
