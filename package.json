@@ -1,7 +1,7 @@
 {
-  "name": "NodejsStarterApp",
+  "name": "BluemixKinetisePersonalityInsightsApp",
   "version": "0.0.1",
-  "description": "A sample nodejs app for Bluemix",
+  "description": "A sample Bluemix Personality Insights with Kinetise integration app",
   "scripts": {
     "start": "node app.js"
   },
