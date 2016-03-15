@@ -200,10 +200,10 @@ function parseDescriptionFromWatsonResponse(req, response) {
     items.forEach(function (item) {
         if (item.graphURL) {
             item.graphURL += '/?sessionId=' + sessionID
-            item.showGraph = true
+            item.showGraph = 'true'
         }
         else {
-            item.showGraph = false
+            item.showGraph = 'false'
         }
     })
 
