@@ -393,6 +393,19 @@ function createChartOptions() {
     }
 }
 
+// -------------------------------------------
+// Welcome screen
+// -------------------------------------------
+app.get('/', function (req, res) {
+    var template = swig.compileFile('templates/index/index.html')
+    var urls = {
+        formUrl: req.protocol + '://' + req.get('host') + '/setContent',
+        feedUrl: req.protocol + '://' + req.get('host') + '/getDescription'
+    }
+
+    res.status(200).send(template(urls))
+})
+
 var appEnv = cfenv.getAppEnv()
 
 app.listen(appEnv.port, function() {

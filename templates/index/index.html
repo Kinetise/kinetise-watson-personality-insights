@@ -1,0 +1,38 @@
+{% extends '../base.html' %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <h3>1. Paste correct Analyze form URL</h3>
+            <p>Take below URL and paste it in form widget pane at <em>Form</em> screen.</p>
+            <pre>{{ formUrl }}</pre>
+            <div class="row">
+                <div class="col-lg-8">
+                    <img src="/img/paste_form.png" class="img-thumbnail"/>
+                </div>
+            </div>
+            <h3>2. Add SessionID to Analyze form</h3>
+            <p>Open form query settings and select SessionID from dynamic params.</p>
+            <div class="row">
+                <div class="col-lg-8">
+                    <img src="/img/form_sessionid.png" class="img-thumbnail"/>
+                </div>
+            </div>
+            <h3>3. Paste correct Summary feed URL</h3>
+            <p>Take below URL and paste it in data feed widget pane at <em>Feed</em> screen.</p>
+            <pre>{{ feedUrl }}</pre>
+            <div class="row">
+                <div class="col-lg-8">
+                    <img src="/img/paste_feed.png" class="img-thumbnail"/>
+                </div>
+            </div>
+            <h3>4. Add SessionID to Summary feed</h3>
+            <p>Open data feed query settings and select SessionID from dynamic params.</p>
+            <div class="row">
+                <div class="col-lg-8">
+                    <img src="/img/feed_sessionid.png" class="img-thumbnail"/>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
