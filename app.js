@@ -196,6 +196,9 @@ function parseDescriptionFromWatsonResponse(req, response) {
     var sessionID = getSessionIDUnchecked(req)
     var tree = response['tree']['children']
     var items = parseChildren(tree, 0)
+    items = items.filter(function (item) {
+        return item.type != '2'
+    })
 
     items.forEach(function (item) {
         if (item.graphURL) {
@@ -205,9 +208,25 @@ function parseDescriptionFromWatsonResponse(req, response) {
         else {
             item.showGraph = 'false'
         }
+
+        item.isHeader = isHeader(item)
+        item.isSubheader = isSubheader(item)
+        item.isLeaf = isLeaf(item)
     })
 
     return items
+}
+
+function isHeader(item) {
+    return item.type == '1'
+}
+
+function isSubheader(item) {
+    return item.type == '3' && item.hasChildren == 'true'
+}
+
+function isLeaf(item) {
+    return item.hasChildren == 'false' && (item.type == '3' || item.type == '4')
 }
 
 function parseChildren(root, nestLevel) {
