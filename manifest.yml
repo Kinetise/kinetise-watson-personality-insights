@@ -13,7 +13,7 @@ applications:
 - path: .
   memory: 256M
   instances: 1
-  name: bluemix-kinetise-personality-insights-app
+  name: watson-personality-insights-app
   disk_quota: 1024M
   buildpack: sdk-for-nodejs_v3_0-20160125-1224
   services:
