@@ -27,6 +27,6 @@ The service publishes three endpoints:
 
 You can deploy this code to Bluemix using button below:
 
-[![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/Kinetise/kinetise-bluemix-insights)
+[![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/Kinetise/kinetise-watson-personality-insights)
 
-Once finished, click "View Your App" to continue.
+Once deployed, look for "View Your App" button to continue.
