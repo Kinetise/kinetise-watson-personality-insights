@@ -13,7 +13,7 @@ This repository contains a backend part of Watson Personality Insights App. It i
 
 The backend part is used by mobile application built in Kinetise and is connecting to IBM Watson to use Personality Insights service.
 
-![Architecture](http://assets.kinetise.com/kinetise_watson_arch_v2.png "Architecture")
+![Architecture](http://assets.kinetise.com/kinetise_watson_arch_v3.png "Architecture")
 
 ## Basic Concept
 
