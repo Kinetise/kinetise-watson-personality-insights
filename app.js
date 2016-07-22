@@ -404,9 +404,10 @@ function createChartOptions() {
 app.get('/', function (req, res) {
     var template = swig.compileFile('templates/index/index.html');
     var urls = {
-        formUrl: req.protocol + '://' + req.get('host') + '/setContent',
+        backendUrl: req.protocol + '://' + req.get('host'),
+		formUrl: req.protocol + '://' + req.get('host') + '/setContent',
         feedUrl: req.protocol + '://' + req.get('host') + '/getDescription',
-        appTemplateUrl: 'https://bluemix.kinetise.com/developer/generator/index/template/watson?backendUrl=' + escape(req.protocol + '://' + req.get('host'))
+        appTemplateUrl: 'https://bluemix.kinetise.com/developer/generator/index/template/watson?backendUrl=' + escape(req.protocol + '://' + req.get('host'))		
     };
 
     res.status(200).send(template(urls));
