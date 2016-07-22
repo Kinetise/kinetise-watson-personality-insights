@@ -15,7 +15,7 @@ applications:
   instances: 1
   name: watson-personality-insights-app
   disk_quota: 1024M
-  buildpack: sdk-for-nodejs_v3_4-20160518-1653
+  buildpack: sdk-for-nodejs_v3_5-20160609-1608
   services:
     - cloudant-db-shared
     - personality-insights-tiered
